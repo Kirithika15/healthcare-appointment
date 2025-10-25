@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>health hub — Book Appointment</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="page-wide center-page" style="padding:30px 16px;">
+  <div class="form-and-chat" style="width:100%;max-width:1100px;">
+    <!-- LEFT: Form -->
+    <div class="form-card">
+      <div class="header-title">
+        <img class="logo" src="https://cdn-icons-png.flaticon.com/512/2966/2966481.png" alt="logo">
+        <div>
+          <div class="title">health hub</div>
+          <div class="subtitle">Book your appointment</div>
+        </div>
+      </div>
+
+      <form id="bookForm" class="form-compact" onsubmit="handleBook(event)">
+        <div class="row">
+          <div class="col">
+            <label class="small">Full Name</label>
+            <input id="fullName" type="text" placeholder="Patient full name" required>
+          </div>
+          <div style="width:120px">
+            <label class="small">Gender</label>
+            <select id="gender">
+              <option value="">—</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label class="small">DOB</label>
+            <input id="dob" type="date" required>
+          </div>
+          <div class="col">
+            <label class="small">Phone</label>
+            <input id="phone" type="tel" placeholder="+91 98xxxx" required>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label class="small">Email</label>
+            <input id="email" type="email" placeholder="you@domain.com" required>
+          </div>
+          <div style="width:160px">
+            <label class="small">Department</label>
+            <select id="department" onchange="populateDoctors(this.value)" required>
+              <option value="">Select</option>
+              <option>Cardiology</option>
+              <option>Orthopedics</option>
+              <option>Dental</option>
+              <option>Neurology</option>
+              <option>Dermatology</option>
+              <option>General</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label class="small">Doctor</label>
+            <select id="doctor" required>
+              <option value="">Select department first</option>
+            </select>
+          </div>
+          <div style="width:140px">
+            <label class="small">Date</label>
+            <input id="apptDate" type="date" required>
+          </div>
+          <div style="width:120px">
+            <label class="small">Time</label>
+            <input id="apptTime" type="time" required>
+          </div>
+        </div>
+
+        <label class="small">Problem (short)</label>
+        <textarea id="problem" rows="3" placeholder="Describe briefly..." ></textarea>
+
+        <div class="mt-8">
+          <button type="submit">Book Appointment</button>
+        </div>
+        <div class="mt-8 small center-text"><a class="link" href="view_appointment.html">View My Appointments</a></div>
+      </form>
+    </div>
+
+    <!-- RIGHT: Chat Panel (also floating chatbot exists) -->
+    <div class="chat-panel">
+      <div style="background:#fff;padding:12px;border-radius:10px;box-shadow:0 8px 24px rgba(2,6,23,0.04)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <img src="https://cdn-icons-png.flaticon.com/512/2966/2966481.png" alt="logo" style="width:40px;border-radius:6px">
+          <div>
+            <div style="font-weight:700">Hato🩺</div>
+            <div class="small">Type a symptom or question</div>
+          </div>
+        </div>
+
+        <div id="inlineChatBody" style="min-height:160px;padding:8px;background:#fbfcff;border-radius:8px;border:1px solid #eef6ff;overflow:auto">
+          <div class="small">Try keywords: fever, cough, headache, appointment, timings, fees</div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <input id="inlineChatInput" placeholder="Type keyword (e.g. fever)" style="flex:1;padding:8px;border-radius:8px;border:1px solid #eef2ff">
+          <button onclick="inlineChat()" style="padding:8px 10px;border-radius:8px;background:#0b6efd;color:#fff;border:none">Ask</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Chatbot (bottom-right) - appears on all pages -->
+<button class="chatbot-btn" id="chatToggle" title="Assistant">💬</button>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div>Hato</div>
+    <div style="font-size:13px"><a href="#" onclick="toggleChat();return false" style="color:#fff;text-decoration:none">Close</a></div>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="msg bot"><div class="bubble">Hello! Ask me about symptoms, booking, timings or fees.</div></div>
+  </div>
+
+  <div class="chat-input">
+    <input id="chatInput" placeholder="Type here..." />
+    <button onclick="sendChat()" style="padding:8px 10px;border-radius:8px;background:#0b6efd;color:#fff;border:none">Send</button>
+  </div>
+</div>
+
+<!-- scripts -->
+<script src="chatbot.js"></script>
+<script>
+  /* local booking + doctors */
+  const DOCTORS = {
+    "Cardiology": ["Dr. Ravi Menon","Dr. Anita Kapoor"],
+    "Orthopedics": ["Dr. Arjun Singh","Dr. Meera Patel"],
+    "Dental": ["Dr. Suresh Kumar","Dr. Kavya N."],
+    "Neurology": ["Dr. Leela Iyer"],
+    "Dermatology": ["Dr. Divya","Dr. Sameer"],
+    "General": ["Dr. Sunil Rao","Dr. Priya Das"]
+  };
+
+  function populateDoctors(dep){
+    const sel = document.getElementById('doctor');
+    sel.innerHTML = '<option value="">Select</option>';
+    if(!DOCTORS[dep]) return;
+    DOCTORS[dep].forEach(d=>{
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = d;
+      sel.appendChild(opt);
+    });
+  }
+
+  function handleBook(e){
+    e.preventDefault();
+    // simple validation
+    const fullName = document.getElementById('fullName').value.trim();
+    if(!fullName){ alert('Please enter name'); return; }
+    const appt = {
+      id: 'a_'+Date.now(),
+      fullName,
+      gender: document.getElementById('gender').value,
+      dob: document.getElementById('dob').value,
+      phone: document.getElementById('phone').value,
+      email: document.getElementById('email').value,
+      department: document.getElementById('department').value,
+      doctor: document.getElementById('doctor').value,
+      date: document.getElementById('apptDate').value,
+      time: document.getElementById('apptTime').value,
+      problem: document.getElementById('problem').value
+    };
+    const apps = JSON.parse(localStorage.getItem('hh_appointments') || '[]');
+    // check conflict: same doctor same date time
+    const conflict = apps.find(a => a.doctor === appt.doctor && a.date === appt.date && a.time === appt.time);
+    if(conflict){ alert('Slot already booked for selected doctor. Choose another.'); return; }
+    apps.push(appt);
+    localStorage.setItem('hh_appointments', JSON.stringify(apps));
+    alert('Appointment booked!');
+    window.location.href = 'view_appointment.html';
+  }
+
+  /* Chatbot UI handlers using getChatbotReply from chatbot.js */
+  function toggleChat(){
+    const win = document.getElementById('chatWindow');
+    win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+  }
+  document.getElementById('chatToggle').addEventListener('click', toggleChat);
+
+  function sendChat(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    addChatMessage('user', text);
+    const reply = window.getChatbotReply(text);
+    setTimeout(()=> addChatMessage('bot', reply), 350);
+    input.value = '';
+  }
+
+  function addChatMessage(kind, text){
+    const body = document.getElementById('chatBody');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (kind === 'user' ? 'user' : 'bot');
+    const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+    div.appendChild(b);
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  /* Inline chat panel */
+  function inlineChat(){
+    const input = document.getElementById('inlineChatInput');
+    const q = input.value.trim();
+    if(!q) return;
+    const ans = window.getChatbotReply(q);
+    const body = document.getElementById('inlineChatBody');
+    const p = document.createElement('div'); p.className='small'; p.textContent = 'You: ' + q;
+    const r = document.createElement('div'); r.className='small'; r.style.marginTop='6px'; r.textContent = 'Assistant: ' + ans;
+    body.appendChild(p); body.appendChild(r);
+    body.scrollTop = body.scrollHeight;
+    input.value='';
+  }
+</script>
+</body>
+</html>

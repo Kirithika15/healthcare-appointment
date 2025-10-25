@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>health hub — Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="center-page">
+    <div class="card">
+      <div class="header-title">
+        <img class="logo" src="https://cdn-icons-png.flaticon.com/512/2966/2966481.png" alt="logo">
+        <div class="title">health hub</div>
+      </div>
+      <div class="subtitle small">Sign in to manage appointments</div>
+
+      <form style="margin-top:12px" onsubmit="handleLogin(event)">
+        <input id="loginEmail" type="email" placeholder="Email" required>
+        <input id="loginPassword" type="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+
+      <div class="mt-8 small">No account? <a class="link" href="register.html">Register</a></div>
+    </div>
+  </div>
+
+  <!-- chatbot -->
+  <button class="chatbot-btn" id="chatToggleBtn">💬</button>
+  <div id="chatWindow" class="chat-window">
+    <div class="chat-header">
+      <div>Health Hub Assistant</div>
+      <div style="font-size:13px"><a href="#" onclick="toggleChat();return false" style="color:#fff;text-decoration:none">Close</a></div>
+    </div>
+    <div class="chat-body" id="chatBody"><div class="msg bot"><div class="bubble">Hello! Ask me about symptoms, booking, timings or fees.</div></div></div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="Type here..." />
+      <button onclick="sendChat()" style="padding:8px 10px;border-radius:8px;background:#0b6efd;color:#fff;border:none">Send</button>
+    </div>
+  </div>
+
+<script src="chatbot.js"></script>
+<script>
+  // login handling (store user info in localStorage under 'hh_user')
+  function handleLogin(e){
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value;
+    const u = JSON.parse(localStorage.getItem('hh_user') || 'null');
+    if(u && u.email === email && u.password === pass){
+      alert('Login successful');
+      // optionally set current user
+      localStorage.setItem('hh_current', JSON.stringify({email:u.email,name:u.name||''}));
+      window.location.href = 'book_appointment.html';
+    } else {
+      alert('Invalid credentials. Please register or use demo.');
+    }
+  }
+
+  // Chatbot functions (re-used)
+  document.getElementById('chatToggleBtn').addEventListener('click', toggleChat);
+  function toggleChat(){
+    const win = document.getElementById('chatWindow');
+    win.style.display = (win.style.display === 'flex') ? 'none' : 'flex';
+  }
+  function sendChat(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    addChatMessage('user', text);
+    const reply = window.getChatbotReply(text);
+    setTimeout(()=> addChatMessage('bot', reply), 350);
+    input.value='';
+  }
+  function addChatMessage(kind, text){
+    const body = document.getElementById('chatBody');
+    const div = document.createElement('div'); div.className = 'msg ' + (kind==='user'?'user':'bot');
+    const bubble = document.createElement('div'); bubble.className='bubble'; bubble.textContent = text;
+    div.appendChild(bubble); body.appendChild(div); body.scrollTop = body.scrollHeight;
+  }
+</script>
+</body>
+</html>
